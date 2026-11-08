@@ -102,7 +102,7 @@ class Deck:
             kind = MSO_SHAPE.PENTAGON if i == 0 else MSO_SHAPE.CHEVRON
             box(sl, x + i * (w - 0.1), 4.85, w, 0.62, name, fill=TEAL if i % 2 == 0 else "2E6870",
                 color=WHITE, size=13, bold=True, kind=kind, r=None, pad=0.18)
-        tb(sl, 1.1, 5.95, 10, 0.4, "Elena · Ingeniera informática · Consultora Java y Release Manager",
+        tb(sl, 1.1, 5.95, 10, 0.4, "Elena Pascual · Ingeniera informática · Consultora Java y Release Manager",
            size=17, color=WHITE)
         slide_number(sl, self.n, SAGE)
         self._notes(sl, m, notes)
