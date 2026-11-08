@@ -281,6 +281,9 @@ class Deck:
         self._notes(sl, m, notes)
 
     def save(self, path):
+        rels = self.prs.part.rels
+        for rid in [k for k, r in rels.items() if r.reltype.endswith("/printerSettings")]:
+            del rels._rels[rid]
         self.prs.save(path)
 
 
@@ -1127,28 +1130,35 @@ public class SolicitudService {
 
     def alg(sl):
         ns = list(range(10, 101, 10))
-        cd = CategoryChartData()
-        cd.categories = [str(n) for n in ns]
-        cd.add_series("n (una pasada)", ns)
-        cd.add_series("n · log n (ordenar)", [round(n * math.log2(n)) for n in ns])
-        cd.add_series("n² (comparar todo con todo)", [n * n for n in ns])
-        gf = sl.shapes.add_chart(XL_CHART_TYPE.LINE, Inches(MX), Inches(1.9), Inches(6.9), Inches(4.0), cd)
-        chart = gf.chart
-        chart.has_legend = True
-        chart.legend.position = XL_LEGEND_POSITION.BOTTOM
-        chart.legend.include_in_layout = False
-        chart.legend.font.size = Pt(12)
-        for s, col in zip(chart.plots[0].series, [TEAL, AMBER, RUST]):
-            s.format.line.color.rgb = rgb(col)
-            s.format.line.width = Pt(3.5)
-            s.smooth = False
-            s.marker.style = XL_MARKER_STYLE.NONE
-        chart.value_axis.tick_labels.font.size = Pt(11)
-        chart.category_axis.tick_labels.font.size = Pt(11)
-        chart.value_axis.major_gridlines.format.line.color.rgb = rgb("D5DDE0")
-        chart.category_axis.has_title = True
-        chart.category_axis.axis_title.text_frame.text = "Número de elementos"
-        chart.category_axis.axis_title.text_frame.paragraphs[0].runs[0].font.size = Pt(11)
+        ns = list(range(10, 101, 10))
+        series = [("n (una pasada)", [n for n in ns], TEAL),
+                  ("n · log n (ordenar)", [n * math.log2(n) for n in ns], AMBER),
+                  ("n² (comparar todo con todo)", [n * n for n in ns], RUST)]
+        px, py, pw, ph = MX + 0.9, 2.05, 5.8, 2.8
+        ymax = 10000.0
+        line(sl, px, py + ph, px + pw, py + ph, color=SLATE, w=1.5)
+        line(sl, px, py, px, py + ph, color=SLATE, w=1.5)
+        for k in range(0, 5):
+            v = k * 2500
+            yy = py + ph - ph * v / ymax
+            if k:
+                line(sl, px, yy, px + pw, yy, color="D5DDE0", w=0.75)
+            tb(sl, px - 0.85, yy - 0.15, 0.75, 0.3, f"{v:,}".replace(",", "."), size=11, color=SLATE, align="r")
+        for i, n in enumerate(ns):
+            xx = px + pw * i / (len(ns) - 1)
+            if i % 3 == 0 or i == len(ns) - 1:
+                tb(sl, xx - 0.3, py + ph + 0.05, 0.6, 0.3, str(n), size=11, color=SLATE, align="c")
+        tb(sl, px, py + ph + 0.35, pw, 0.3, "Número de elementos", size=11, color=SLATE, align="c")
+        tb(sl, MX, 1.75, 4.5, 0.3, "Operaciones necesarias", size=11, color=SLATE)
+        for _, vals, col in series:
+            pts = [(px + pw * i / (len(vals) - 1), py + ph - ph * min(v, ymax) / ymax) for i, v in enumerate(vals)]
+            for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+                line(sl, x1, y1, x2, y2, color=col, w=3.5)
+        lx = MX + 0.3
+        for name, _, col in series:
+            shape(sl, MSO_SHAPE.RECTANGLE, lx, 5.78, 0.3, 0.1, fill=col)
+            tb(sl, lx + 0.38, 5.66, 2.2, 0.35, name, size=11, color=INK, anchor="m")
+            lx += 2.3
         code_panel(sl, 7.85, 1.95, W - MX - 7.85, """// Lista: recorre todo en cada búsqueda
 List<String> vistos = new ArrayList<>();
 vistos.contains(id);   // O(n)
